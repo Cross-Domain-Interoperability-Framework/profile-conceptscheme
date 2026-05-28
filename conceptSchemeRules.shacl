@@ -1,0 +1,38 @@
+@prefix rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh:     <http://www.w3.org/ns/shacl#> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:   <http://www.w3.org/2004/02/skos/core#> .
+@prefix skosv:  <https://cdif.org/validation/0.1/skos#> .
+@base <https://www.ogc.org/rules/template/> .
+
+skosv:ConceptSchemeShape a sh:NodeShape ;
+    sh:targetClass skos:ConceptScheme ;
+    sh:nodeKind sh:IRI ;
+    sh:property skosv:schemePrefLabelProperty ;
+    sh:property skosv:schemeHasTopConceptProperty ;
+    sh:message "A SKOS ConceptScheme should have an IRI identifier, a prefLabel, and at least one hasTopConcept."
+    .
+
+skosv:schemePrefLabelProperty
+    a sh:PropertyShape ;
+    sh:path skos:prefLabel ;
+    sh:minCount 1 ;
+    sh:message "Every skos:ConceptScheme must have at least one skos:prefLabel."
+    .
+
+skosv:schemeHasTopConceptProperty
+    a sh:PropertyShape ;
+    sh:path skos:hasTopConcept ;
+    sh:minCount 1 ;
+    sh:severity sh:Warning ;
+    sh:message "A skos:ConceptScheme should declare at least one skos:hasTopConcept to define the vocabulary entry points."
+    .
+
+skosv:schemePrefLabelUniqueLangShape a sh:NodeShape ;
+    sh:targetClass skos:ConceptScheme ;
+    sh:property [
+        sh:path skos:prefLabel ;
+        sh:uniqueLang true ;
+        sh:message "A ConceptScheme should have at most one skos:prefLabel per language tag."
+    ] .
