@@ -1,0 +1,59 @@
+{
+    "@context": {
+        "skos": "http://www.w3.org/2004/02/skos/core#",
+        "schema": "http://schema.org/",
+        "dcterms": "http://purl.org/dc/terms/",
+        "ex": "https://example.org/vocab/datatype/"
+    },
+    "@id": "ex:datatypeScheme",
+    "@type": ["skos:ConceptScheme"],
+    "skos:prefLabel": "Example Physical Data Type Vocabulary",
+    "skos:definition": "Controlled vocabulary of physical data type concepts used to qualify cdif:physicalDataType in CDIF physical mappings.",
+    "schema:version": "1.0",
+    "skos:hasTopConcept": [
+        {
+            "@id": "ex:numeric",
+            "@type": ["skos:Concept"],
+            "skos:prefLabel": "Numeric",
+            "skos:notation": ["numeric"],
+            "skos:definition": "A numeric value (integer or floating point).",
+            "skos:inScheme": {"@id": "ex:datatypeScheme"},
+            "skos:narrower": [
+                {
+                    "@id": "ex:integer",
+                    "@type": ["skos:Concept"],
+                    "skos:prefLabel": "Integer",
+                    "skos:notation": ["integer"],
+                    "skos:definition": "A whole number with no fractional part.",
+                    "skos:inScheme": {"@id": "ex:datatypeScheme"},
+                    "skos:broader": [{"@id": "ex:numeric"}]
+                },
+                {
+                    "@id": "ex:float",
+                    "@type": ["skos:Concept"],
+                    "skos:prefLabel": "Float",
+                    "skos:notation": ["float"],
+                    "skos:definition": "A floating-point numeric value.",
+                    "skos:inScheme": {"@id": "ex:datatypeScheme"},
+                    "skos:broader": [{"@id": "ex:numeric"}]
+                }
+            ]
+        },
+        {
+            "@id": "ex:text",
+            "@type": ["skos:Concept"],
+            "skos:prefLabel": "Text",
+            "skos:notation": ["text"],
+            "skos:definition": "A character string.",
+            "skos:inScheme": {"@id": "ex:datatypeScheme"}
+        },
+        {
+            "@id": "ex:date",
+            "@type": ["skos:Concept"],
+            "skos:prefLabel": "Date",
+            "skos:notation": ["date"],
+            "skos:definition": "A calendar date.",
+            "skos:inScheme": {"@id": "ex:datatypeScheme"}
+        }
+    ]
+}
