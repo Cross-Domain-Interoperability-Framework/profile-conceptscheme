@@ -6,6 +6,23 @@ The **CDIF Concept Scheme profile ** (`cdifConceptScheme`) describes a **SKOS co
 
 **Related profile.** A *code list* is a concept scheme whose members are controlled values carrying machine notation codes (`skos:notation`). Code lists are published as the separate [profile-codelist](https://github.com/Cross-Domain-Interoperability-Framework/profile-codelist) profile. Use Concept Scheme for a general vocabulary of meanings; use Codelist when each concept must carry a code.
 
+# Table of contents
+
+  - [2. Conformance](#2-conformance)
+  - [3. Concepts](#3-concepts)
+  - [4. Validation](#4-validation)
+- [Model](#model)
+  - [ConceptScheme](#sec-conceptscheme)
+  - [Data Types](#data-types)
+  - [LanguageTaggedValue](#sec-languagetaggedvalue)
+  - [Object Reference](#sec-objectreference)
+  - [Optional Properties](#optional-properties)
+  - [Optional Properties](#optional-properties)
+  - [Required Properties](#required-properties)
+- [Bidirectional Hierarchy](#bidirectional-hierarchy)
+- [Array Convention](#array-convention)
+  - [5. Provenance of the artifacts](#5-provenance-of-the-artifacts)
+
 ## 2. Conformance
 
 A conforming concept scheme is typed as a `skos:ConceptScheme` and declares conformance to the Concept Scheme profile identifier:
@@ -47,130 +64,73 @@ python FrameAndValidate.py examples/exampleSkosConceptScheme.json --validate
 # Model
 
 ## ConceptScheme {#sec-conceptscheme}
+
 - The root object representing the concept scheme.
 
 ### @id
+
 - **Cardinality:** Required
 - **Content:** string.uri
 - **Description:** Globally unique, resolvable URI for the concept scheme.
+
 ### @type
+
 - **Cardinality:** Required
 - **Content:** array
 - **Description:** Must include `skos:ConceptScheme`.
+
 ### skos:prefLabel
+
 - **Cardinality:** Required
 - **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array of [LanguageTaggedValue](#sec-languagetaggedvalue)
 - **Description:** Preferred human-readable label for the scheme. At most one per language.
+
 ### skos:hasTopConcept
+
 - **Cardinality:** Required, Repeatable
 - **Content:** array of [CdifConcept](#sec-cdifconcept) or [object reference](#sec-objectreference)
 - **Description:** Top-level concepts that have no `skos:broader` within this scheme. The JSON-LD hierarchy is rooted here — all child concepts are reached by traversing `skos:narrower` from these top concepts.
+
 ### schema:identifier
+
 - **Cardinality:** Required
 - **Content:** string or [PropertyValue](#sec-propertyvalue)
 - **Description:** Primary identifier for the concept scheme. CDIF core metadata property; takes precedence over `dcterms:identifier`.
+
 ### schema:dateModified
+
 - **Cardinality:** Required
 - **Content:** string, ISO 8601
 - **Description:** Date when the concept scheme was last modified. Takes precedence over `dcterms:modified`.
 
 - **CHOICE — at least one of:**
+
 ### schema:license
+
 - **Cardinality:** Required if no conditionsOfAccess
 - **Content:** array of string or [object reference](#sec-objectreference)
 - **Description:** License for the concept scheme. Takes precedence over `dcterms:license`.
+
 ### schema:conditionsOfAccess
+
 - **Cardinality:** Required if no license
 - **Content:** array of string
 - **Description:** Text statement of access conditions.
 
-
-### Optional Properties
-### schema:url
-- **Cardinality:** Optional
-- **Content:** string.uri
-- **Description:** Web location of a page describing the concept scheme. Default: `'missing'`.
-### schema:creator
-- **Cardinality:** Optional
-- **Content:** Person, Organization, or @list
-- **Description:** Author or maintainer of the vocabulary.
-### skos:definition
-- **Cardinality:** Optional
-- **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array
-- **Description:** Formal explanation of the meaning or purpose of the scheme.
-### skos:altLabel
-- **Cardinality:** Optional
-- **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array
-- **Description:** Alternative labels (acronyms, abbreviations, spelling variants).
-### skos:note
-- **Cardinality:** Optional
-- **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array
-- **Description:** General note about the scheme.
-
-
-## cdifConcept {#sec-cdifconcept}
-- SKOS Concept with CDIF concept scheme constraints. Represents a single term or category within a concept scheme.
-
-### Required Properties
-### @id
-- **Cardinality:** Required
-- **Content:** string.uri
-- **Description:** Globally unique, resolvable URI for this concept.
-### @type
-- **Cardinality:** Required
-- **Content:** array
-- **Description:** Must include `skos:Concept`.
-### skos:prefLabel
-- **Cardinality:** Required
-- **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array of [LanguageTaggedValue](#sec-languagetaggedvalue)
-- **Description:** Preferred label. At most one per language (enforced by SHACL `sh:uniqueLang`).
-### skos:definition
-- **Cardinality:** Required
-- **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array
-- **Description:** Formal definition of this concept.
-
-
-### Optional Properties
-
-### skos:inScheme
-- **Cardinality:** Required
-- **Content:** [object reference](#sec-objectreference) or array of object references
-- **Description:** The concept scheme(s) this concept belongs to. Each must be `{"@id": "scheme-uri"}`.
-### skos:notation
-- **Cardinality:** Optional, Repeatable
-- **Content:** array of string
-- **Description:** Classification codes. Should be unique within the scheme.
-### skos:broader
-- **Cardinality:** Required if concept appears in skos:narrower
-- **Content:** array of object references
-- **Description:** Broader (parent) concepts. Any concept that is the target of `skos:narrower` on another concept must declare `skos:broader` pointing back. See [Bidirectional hierarchy](#bidirectional-hierarchy) below. Each item is `{"@id": "parent-concept-uri"}`.
-### skos:narrower
-- **Cardinality:** Optional, Repeatable
-- **Content:** array of [CdifConcept](#sec-cdifconcept) or [object reference](#sec-objectreference)
-- **Description:** Narrower (child) concepts. If present, each inline child concept must have `skos:broader` pointing back to this concept. Items can be full inline concept objects (for building the JSON tree) or `{"@id": "child-uri"}` references.
-### skos:altLabel
-- **Cardinality:** Optional
-- **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array
-- **Description:** Alternative labels.
-### skos:note
-- **Cardinality:** Optional
-- **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array
-- **Description:** General note.
-### skos:topConceptOf
-- **Cardinality:** Optional
-- **Content:** [object reference](#sec-objectreference) or array
-- **Description:** Scheme(s) for which this is a top concept.
-
-
 ## Data Types
 
 ## LanguageTaggedValue {#sec-languagetaggedvalue}
+
 - An RDF literal with a language tag, serialized as a JSON-LD value object.
+
 ### @value
+
 - **Cardinality:** Required
 - **Content:** string
 - **Description:** The text content.
+
 ### @language
+
 - **Cardinality:** Required
 - **Content:** string
 - **Description:** BCP 47 language tag (e.g., `en`, `fr`, `de`, `sv`).
@@ -179,12 +139,14 @@ python FrameAndValidate.py examples/exampleSkosConceptScheme.json --validate
 ```
 
 ## Object Reference {#sec-objectreference}
+
 - A reference to another node by its `@id`, used for linking to concepts or schemes defined elsewhere in the graph or externally.
 ```json
 {"@id": "https://w3id.org/isample/vocabulary/sampledfeature/anysampledfeature"}
 ```
 
 ### PropertyValue (for schema:identifier) {#sec-propertyvalue}
+
 - When the identifier is not a simple resolvable URI, use `schema:PropertyValue`:
 
 ```json
@@ -195,6 +157,112 @@ python FrameAndValidate.py examples/exampleSkosConceptScheme.json --validate
   "schema:url": "https://doi.org/10.5683/SP2/TTJNIU"
 }
 ```
+
+## Optional Properties
+
+### schema:url
+
+- **Cardinality:** Optional
+- **Content:** string.uri
+- **Description:** Web location of a page describing the concept scheme. Default: `'missing'`.
+
+### schema:creator
+
+- **Cardinality:** Optional
+- **Content:** Person, Organization, or @list
+- **Description:** Author or maintainer of the vocabulary.
+
+### skos:definition
+
+- **Cardinality:** Optional
+- **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array
+- **Description:** Formal explanation of the meaning or purpose of the scheme.
+
+### skos:altLabel
+
+- **Cardinality:** Optional
+- **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array
+- **Description:** Alternative labels (acronyms, abbreviations, spelling variants).
+
+### skos:note
+
+- **Cardinality:** Optional
+- **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array
+- **Description:** General note about the scheme.
+
+### cdifConcept {#sec-cdifconcept}
+
+- SKOS Concept with CDIF concept scheme constraints. Represents a single term or category within a concept scheme.
+
+## Optional Properties
+
+### skos:inScheme
+
+- **Cardinality:** Required
+- **Content:** [object reference](#sec-objectreference) or array of object references
+- **Description:** The concept scheme(s) this concept belongs to. Each must be `{"@id": "scheme-uri"}`.
+
+### skos:notation
+
+- **Cardinality:** Optional, Repeatable
+- **Content:** array of string
+- **Description:** Classification codes. Should be unique within the scheme.
+
+### skos:broader
+
+- **Cardinality:** Required if concept appears in skos:narrower
+- **Content:** array of object references
+- **Description:** Broader (parent) concepts. Any concept that is the target of `skos:narrower` on another concept must declare `skos:broader` pointing back. See [Bidirectional hierarchy](#bidirectional-hierarchy) below. Each item is `{"@id": "parent-concept-uri"}`.
+
+### skos:narrower
+
+- **Cardinality:** Optional, Repeatable
+- **Content:** array of [CdifConcept](#sec-cdifconcept) or [object reference](#sec-objectreference)
+- **Description:** Narrower (child) concepts. If present, each inline child concept must have `skos:broader` pointing back to this concept. Items can be full inline concept objects (for building the JSON tree) or `{"@id": "child-uri"}` references.
+
+### skos:altLabel
+
+- **Cardinality:** Optional
+- **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array
+- **Description:** Alternative labels.
+
+### skos:note
+
+- **Cardinality:** Optional
+- **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array
+- **Description:** General note.
+
+### skos:topConceptOf
+
+- **Cardinality:** Optional
+- **Content:** [object reference](#sec-objectreference) or array
+- **Description:** Scheme(s) for which this is a top concept.
+
+## Required Properties
+
+### @id
+
+- **Cardinality:** Required
+- **Content:** string.uri
+- **Description:** Globally unique, resolvable URI for this concept.
+
+### @type
+
+- **Cardinality:** Required
+- **Content:** array
+- **Description:** Must include `skos:Concept`.
+
+### skos:prefLabel
+
+- **Cardinality:** Required
+- **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array of [LanguageTaggedValue](#sec-languagetaggedvalue)
+- **Description:** Preferred label. At most one per language (enforced by SHACL `sh:uniqueLang`).
+
+### skos:definition
+
+- **Cardinality:** Required
+- **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array
+- **Description:** Formal definition of this concept.
 
 # Bidirectional Hierarchy
 
@@ -227,6 +295,7 @@ Any concept that appears as a value of `skos:narrower` **must** also declare `sk
 ```
 
 # Array Convention
+
 Unlike other CDIF profiles, the skos profile does **not** require repeatable properties to always be serialized as arrays. This recognizes standard SKOS practice that allows either a single string or an array for literal values. For example, both of these are valid:
 
 ```json
@@ -241,7 +310,6 @@ Unlike other CDIF profiles, the skos profile does **not** require repeatable pro
 ```
 
 Consumers of CDIF concept scheme documents should test whether a value is a string or an array before iterating.
-
 
 ## 5. Provenance of the artifacts
 
