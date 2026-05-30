@@ -12,10 +12,10 @@ The **CDIF Concept Scheme profile ** (`cdifConceptScheme`) describes a **SKOS co
   - [3. Concepts](#3-concepts)
   - [4. Validation](#4-validation)
 - [Model](#model)
-  - [ConceptScheme](#sec-conceptscheme)
+  - [ConceptScheme](#conceptscheme)
   - [Data Types](#data-types)
-  - [LanguageTaggedValue](#sec-languagetaggedvalue)
-  - [Object Reference](#sec-objectreference)
+  - [LanguageTaggedValue](#languagetaggedvalue)
+  - [Object Reference](#object-reference)
   - [Optional Properties](#optional-properties)
   - [Optional Properties](#optional-properties)
   - [Required Properties](#required-properties)
@@ -63,7 +63,7 @@ python FrameAndValidate.py examples/exampleSkosConceptScheme.json --validate
 
 # Model
 
-## ConceptScheme {#sec-conceptscheme}
+## ConceptScheme
 
 - The root object representing the concept scheme.
 
@@ -82,19 +82,19 @@ python FrameAndValidate.py examples/exampleSkosConceptScheme.json --validate
 ### skos:prefLabel
 
 - **Cardinality:** Required
-- **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array of [LanguageTaggedValue](#sec-languagetaggedvalue)
+- **Content:** string, [LanguageTaggedValue](#languagetaggedvalue), or array of [LanguageTaggedValue](#languagetaggedvalue)
 - **Description:** Preferred human-readable label for the scheme. At most one per language.
 
 ### skos:hasTopConcept
 
 - **Cardinality:** Required, Repeatable
-- **Content:** array of [CdifConcept](#sec-cdifconcept) or [object reference](#sec-objectreference)
+- **Content:** array of [CdifConcept](#cdifconcept) or [object reference](#object-reference)
 - **Description:** Top-level concepts that have no `skos:broader` within this scheme. The JSON-LD hierarchy is rooted here — all child concepts are reached by traversing `skos:narrower` from these top concepts.
 
 ### schema:identifier
 
 - **Cardinality:** Required
-- **Content:** string or [PropertyValue](#sec-propertyvalue)
+- **Content:** string or [PropertyValue](#propertyvalue-for-schemaidentifier)
 - **Description:** Primary identifier for the concept scheme. CDIF core metadata property; takes precedence over `dcterms:identifier`.
 
 ### schema:dateModified
@@ -108,7 +108,7 @@ python FrameAndValidate.py examples/exampleSkosConceptScheme.json --validate
 ### schema:license
 
 - **Cardinality:** Required if no conditionsOfAccess
-- **Content:** array of string or [object reference](#sec-objectreference)
+- **Content:** array of string or [object reference](#object-reference)
 - **Description:** License for the concept scheme. Takes precedence over `dcterms:license`.
 
 ### schema:conditionsOfAccess
@@ -119,7 +119,7 @@ python FrameAndValidate.py examples/exampleSkosConceptScheme.json --validate
 
 ## Data Types
 
-## LanguageTaggedValue {#sec-languagetaggedvalue}
+## LanguageTaggedValue
 
 - An RDF literal with a language tag, serialized as a JSON-LD value object.
 
@@ -138,14 +138,14 @@ python FrameAndValidate.py examples/exampleSkosConceptScheme.json --validate
 {"@value": "Sampled Feature Type vocabulary", "@language": "en"}
 ```
 
-## Object Reference {#sec-objectreference}
+## Object Reference
 
 - A reference to another node by its `@id`, used for linking to concepts or schemes defined elsewhere in the graph or externally.
 ```json
 {"@id": "https://w3id.org/isample/vocabulary/sampledfeature/anysampledfeature"}
 ```
 
-### PropertyValue (for schema:identifier) {#sec-propertyvalue}
+### PropertyValue (for schema:identifier)
 
 - When the identifier is not a simple resolvable URI, use `schema:PropertyValue`:
 
@@ -175,22 +175,22 @@ python FrameAndValidate.py examples/exampleSkosConceptScheme.json --validate
 ### skos:definition
 
 - **Cardinality:** Optional
-- **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array
+- **Content:** string, [LanguageTaggedValue](#languagetaggedvalue), or array
 - **Description:** Formal explanation of the meaning or purpose of the scheme.
 
 ### skos:altLabel
 
 - **Cardinality:** Optional
-- **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array
+- **Content:** string, [LanguageTaggedValue](#languagetaggedvalue), or array
 - **Description:** Alternative labels (acronyms, abbreviations, spelling variants).
 
 ### skos:note
 
 - **Cardinality:** Optional
-- **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array
+- **Content:** string, [LanguageTaggedValue](#languagetaggedvalue), or array
 - **Description:** General note about the scheme.
 
-### cdifConcept {#sec-cdifconcept}
+### cdifConcept
 
 - SKOS Concept with CDIF concept scheme constraints. Represents a single term or category within a concept scheme.
 
@@ -199,7 +199,7 @@ python FrameAndValidate.py examples/exampleSkosConceptScheme.json --validate
 ### skos:inScheme
 
 - **Cardinality:** Required
-- **Content:** [object reference](#sec-objectreference) or array of object references
+- **Content:** [object reference](#object-reference) or array of object references
 - **Description:** The concept scheme(s) this concept belongs to. Each must be `{"@id": "scheme-uri"}`.
 
 ### skos:notation
@@ -217,25 +217,25 @@ python FrameAndValidate.py examples/exampleSkosConceptScheme.json --validate
 ### skos:narrower
 
 - **Cardinality:** Optional, Repeatable
-- **Content:** array of [CdifConcept](#sec-cdifconcept) or [object reference](#sec-objectreference)
+- **Content:** array of [CdifConcept](#cdifconcept) or [object reference](#object-reference)
 - **Description:** Narrower (child) concepts. If present, each inline child concept must have `skos:broader` pointing back to this concept. Items can be full inline concept objects (for building the JSON tree) or `{"@id": "child-uri"}` references.
 
 ### skos:altLabel
 
 - **Cardinality:** Optional
-- **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array
+- **Content:** string, [LanguageTaggedValue](#languagetaggedvalue), or array
 - **Description:** Alternative labels.
 
 ### skos:note
 
 - **Cardinality:** Optional
-- **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array
+- **Content:** string, [LanguageTaggedValue](#languagetaggedvalue), or array
 - **Description:** General note.
 
 ### skos:topConceptOf
 
 - **Cardinality:** Optional
-- **Content:** [object reference](#sec-objectreference) or array
+- **Content:** [object reference](#object-reference) or array
 - **Description:** Scheme(s) for which this is a top concept.
 
 ## Required Properties
@@ -255,13 +255,13 @@ python FrameAndValidate.py examples/exampleSkosConceptScheme.json --validate
 ### skos:prefLabel
 
 - **Cardinality:** Required
-- **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array of [LanguageTaggedValue](#sec-languagetaggedvalue)
+- **Content:** string, [LanguageTaggedValue](#languagetaggedvalue), or array of [LanguageTaggedValue](#languagetaggedvalue)
 - **Description:** Preferred label. At most one per language (enforced by SHACL `sh:uniqueLang`).
 
 ### skos:definition
 
 - **Cardinality:** Required
-- **Content:** string, [LanguageTaggedValue](#sec-languagetaggedvalue), or array
+- **Content:** string, [LanguageTaggedValue](#languagetaggedvalue), or array
 - **Description:** Formal definition of this concept.
 
 # Bidirectional Hierarchy
