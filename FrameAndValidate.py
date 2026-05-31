@@ -42,6 +42,7 @@ ARRAY_PROPERTIES = [
     'skos:example',
     'skos:note',
     'skos:scopeNote',
+    'schema:subjectOf',
     'dcterms:conformsTo',
 ]
 
