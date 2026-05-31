@@ -1,6 +1,6 @@
 # CDIF Concept Scheme Profile — Implementation Guide
 
-#. Purpose and scope
+# Purpose and scope
 
 The **CDIF Concept Scheme profile ** (`cdifConceptScheme`) describes a **SKOS concept scheme** — a controlled vocabulary of concepts used in CDIF metadata. A typical concept scheme is a community glossary or thesaurus that supplies shared definitions and terms: the concepts used to name variables, classify resources, or qualify measurements in other CDIF profiles.
 
