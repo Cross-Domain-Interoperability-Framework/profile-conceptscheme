@@ -22,9 +22,12 @@ cdifd:CDIFConceptSchemeConformsToShape a sh:NodeShape ;
             sh:select """
                 PREFIX schema: <http://schema.org/>
                 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+                PREFIX dcat: <http://www.w3.org/ns/dcat#>
                 SELECT ?this WHERE {
                     ?scheme schema:subjectOf ?this .
                     ?scheme a skos:ConceptScheme .
+                    ?this schema:additionalType ?at .
+                    FILTER( ?at = dcat:CatalogRecord || STR(?at) = "dcat:CatalogRecord" )
                 }
             """ ] .
 
