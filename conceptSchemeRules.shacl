@@ -1,1 +1,48 @@
+@prefix cdifd: <https://cdif.org/validation/0.1/shacl#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+cdifd:CDIFConceptSchemeConceptShape a sh:NodeShape ;
+    sh:property [ a sh:PropertyShape ;
+            sh:message "skos:prefLabel is required on every concept in a CDIF concept scheme." ;
+            sh:minCount 1 ;
+            sh:path skos:prefLabel ] ;
+    sh:targetClass skos:Concept .
+
+cdifd:CDIFConceptSchemeConformsToShape a sh:NodeShape ;
+    sh:property [ a sh:PropertyShape ;
+            sh:hasValue <https://w3id.org/cdif/conceptscheme/1.1> ;
+            sh:message "A subjectOf catalog record on a CDIF concept scheme must include dcterms:conformsTo <https://w3id.org/cdif/conceptscheme/1.1>." ;
+            sh:minCount 1 ;
+            sh:path dcterms:conformsTo ] ;
+    sh:target [ a sh:SPARQLTarget ;
+            sh:prefixes cdifd: ;
+            sh:select """
+                PREFIX schema: <http://schema.org/>
+                PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+                SELECT ?this WHERE {
+                    ?scheme schema:subjectOf ?this .
+                    ?scheme a skos:ConceptScheme .
+                }
+            """ ] .
+
+cdifd:CDIFConceptSchemeShape a sh:NodeShape ;
+    sh:message "A CDIF concept scheme must have a resolvable IRI as @id." ;
+    sh:nodeKind sh:IRI ;
+    sh:property [ a sh:PropertyShape ;
+            sh:message "skos:prefLabel is required on a CDIF concept scheme." ;
+            sh:minCount 1 ;
+            sh:path skos:prefLabel ],
+        [ a sh:PropertyShape ;
+            sh:message "skos:definition is required on a CDIF concept scheme." ;
+            sh:minCount 1 ;
+            sh:path skos:definition ],
+        [ a sh:PropertyShape ;
+            sh:class skos:Concept ;
+            sh:message "A concept scheme must declare at least one skos:hasTopConcept." ;
+            sh:minCount 1 ;
+            sh:path skos:hasTopConcept ] ;
+    sh:targetClass skos:ConceptScheme .
 
