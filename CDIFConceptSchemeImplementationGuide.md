@@ -101,6 +101,12 @@ python FrameAndValidate.py examples/exampleSkosConceptScheme.json --validate
 - **Content:** array of [CdifConcept](#cdifconcept) or [object reference](#object-reference)
 - **Description:** Top-level concepts that have no `skos:broader` within this scheme. The JSON-LD hierarchy is rooted here — all child concepts are reached by traversing `skos:narrower` from these top concepts.
 
+### skos:definition
+
+- **Cardinality:** Required
+- **Content:** string, [LanguageTaggedValue](#languagetaggedvalue), or array
+- **Description:** Formal explanation of the meaning or purpose of the scheme.
+
 ### schema:identifier
 
 - **Cardinality:** Required
@@ -189,12 +195,6 @@ python FrameAndValidate.py examples/exampleSkosConceptScheme.json --validate
 - **Cardinality:** Optional
 - **Content:** Person, Organization, or @list
 - **Description:** Author or maintainer of the vocabulary.
-
-### skos:definition
-
-- **Cardinality:** Optional
-- **Content:** string, [LanguageTaggedValue](#languagetaggedvalue), or array
-- **Description:** Formal explanation of the meaning or purpose of the scheme.
 
 ### skos:altLabel
 
