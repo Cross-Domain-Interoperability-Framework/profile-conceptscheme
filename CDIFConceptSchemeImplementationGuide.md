@@ -153,7 +153,7 @@ python FrameAndValidate.py examples/exampleSkosConceptScheme.json --validate
 
 - **Cardinality:** Required
 - **Content:** string
-- **Description:** BCP 47 language tag (e.g., `en`, `fr`, `de`, `sv`).
+- **Description:** LanguageTaggedValue/properties/@language values specify the language of the element content using BCP 47 language tag (e.g. en, fr, de).
 ```json
 {"@value": "Sampled Feature Type vocabulary", "@language": "en"}
 ```
