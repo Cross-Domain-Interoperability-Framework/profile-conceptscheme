@@ -25,7 +25,7 @@ The **CDIF Concept Scheme profile ** (`cdifConceptScheme`) describes a **SKOS co
 
 ## 2. Conformance
 
-[↑ Back to TOC](#table-of-contents)
+[^ Back to TOC](#table-of-contents)
 
 A conforming concept scheme is typed as a `skos:ConceptScheme` and declares conformance to the Concept Scheme profile identifier:
 
@@ -50,13 +50,13 @@ Required elements for the Concept Scheme:
 
 ## 3. Concepts
 
-[↑ Back to TOC](#table-of-contents)
+[^ Back to TOC](#table-of-contents)
 
 Top concepts (and their narrower concepts) are `skos:Concept` nodes, given inline or by `@id` reference. Each concept carries `skos:prefLabel` and   `skos:definition`. Optional properties include `skos:note`, `skos:inScheme`, and the hierarchy relations `skos:broader` / `skos:narrower` (themselves inline concepts or `@id` references). 
 
 ## 4. Validation
 
-[↑ Back to TOC](#table-of-contents)
+[^ Back to TOC](#table-of-contents)
 
 - **JSON Schema** — `cdifConceptSchemeStructuredSchema.json` (Draft 2020-12), generated from the source register.
 - **SHACL** — `conceptSchemeRules.shacl`, which targets `skos:ConceptScheme` and checks that a scheme has an IRI identifier, at least one `skos:prefLabel` (with `sh:uniqueLang`), and at least one `skos:hasTopConcept`.
@@ -69,11 +69,11 @@ python FrameAndValidate.py examples/exampleSkosConceptScheme.json --validate
 
 # Model
 
-[↑ Back to TOC](#table-of-contents)
+[^ Back to TOC](#table-of-contents)
 
 ## ConceptScheme
 
-[↑ Back to TOC](#table-of-contents)
+[^ Back to TOC](#table-of-contents)
 
 - The root object representing the concept scheme.
 
@@ -135,11 +135,11 @@ python FrameAndValidate.py examples/exampleSkosConceptScheme.json --validate
 
 ## Data Types
 
-[↑ Back to TOC](#table-of-contents)
+[^ Back to TOC](#table-of-contents)
 
 ## LanguageTaggedValue
 
-[↑ Back to TOC](#table-of-contents)
+[^ Back to TOC](#table-of-contents)
 
 - An RDF literal with a language tag, serialized as a JSON-LD value object.
 
@@ -160,7 +160,7 @@ python FrameAndValidate.py examples/exampleSkosConceptScheme.json --validate
 
 ## Object Reference
 
-[↑ Back to TOC](#table-of-contents)
+[^ Back to TOC](#table-of-contents)
 
 - A reference to another node by its `@id`, used for linking to concepts or schemes defined elsewhere in the graph or externally.
 ```json
@@ -182,7 +182,7 @@ python FrameAndValidate.py examples/exampleSkosConceptScheme.json --validate
 
 ## Optional Properties
 
-[↑ Back to TOC](#table-of-contents)
+[^ Back to TOC](#table-of-contents)
 
 ### schema:url
 
@@ -214,7 +214,7 @@ python FrameAndValidate.py examples/exampleSkosConceptScheme.json --validate
 
 ## Optional Properties
 
-[↑ Back to TOC](#table-of-contents)
+[^ Back to TOC](#table-of-contents)
 
 ### skos:inScheme
 
@@ -260,7 +260,7 @@ python FrameAndValidate.py examples/exampleSkosConceptScheme.json --validate
 
 ## Required Properties
 
-[↑ Back to TOC](#table-of-contents)
+[^ Back to TOC](#table-of-contents)
 
 ### @id
 
@@ -288,7 +288,7 @@ python FrameAndValidate.py examples/exampleSkosConceptScheme.json --validate
 
 # Bidirectional Hierarchy
 
-[↑ Back to TOC](#table-of-contents)
+[^ Back to TOC](#table-of-contents)
 
 CDIF guidelines require concept hierarchies to be expressed in both directions:
 
@@ -320,7 +320,7 @@ Any concept that appears as a value of `skos:narrower` **must** also declare `sk
 
 # Array Convention
 
-[↑ Back to TOC](#table-of-contents)
+[^ Back to TOC](#table-of-contents)
 
 Unlike other CDIF profiles, the skos profile does **not** require repeatable properties to always be serialized as arrays. This recognizes standard SKOS practice that allows either a single string or an array for literal values. For example, both of these are valid:
 
@@ -339,7 +339,7 @@ Consumers of CDIF concept scheme documents should test whether a value is a stri
 
 ## 5. Provenance of the artifacts
 
-[↑ Back to TOC](#table-of-contents)
+[^ Back to TOC](#table-of-contents)
 
 Generated from the canonical [metadataBuildingBlocks](https://github.com/Cross-Domain-Interoperability-Framework/metadataBuildingBlocks) register:
 
