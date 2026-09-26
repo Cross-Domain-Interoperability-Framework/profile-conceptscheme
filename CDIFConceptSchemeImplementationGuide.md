@@ -308,7 +308,7 @@ An RDF literal with a language tag, serialized as a JSON-LD value object. Accept
 
 - **Cardinality:** Optional
 - **Content:** string
-- **Description:** BCP 47 language tag (e.g. `en`, `fr`, `de`) naming the language of `@value`. Not required by the schema — a `LanguageTaggedValue` carrying only `@value` is valid, and is equivalent to an untagged literal. Omitting it forfeits the point of the type, and leaves `sh:uniqueLang` with nothing to distinguish one label from another, so supply it wherever the language is known.
+- **Description:** LanguageTaggedValue/properties/@language values specify the language of the element content using BCP 47 language tag (e.g. en, fr, de).
 
 ## ConceptRef
 
