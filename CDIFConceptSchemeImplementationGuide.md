@@ -147,7 +147,7 @@ The root object representing the concept scheme.
 
 - **Cardinality:** Optional, Repeatable
 - **Content:** array of string
-- **Description:** Classification code or notation for the concept scheme itself. Always an array here, unlike `skos:notation` on a concept, which is a single string.
+- **Description:** Classification code for this concept within a scheme.
 
 ### skos:note
 
@@ -165,7 +165,7 @@ The root object representing the concept scheme.
 
 - **Cardinality:** Optional
 - **Content:** [schema:Dataset](#schemadataset-the-catalog-record)
-- **Description:** The catalog record describing this concept scheme as CDIF-conformant metadata. This is the only place profile conformance is declared. Optional on the scheme, but when present its own `@type`, `schema:additionalType` and `dcterms:conformsTo` are all required — see [schema:Dataset](#schemadataset-the-catalog-record).
+- **Description:** used with schema:additionalType = dcat:CatalogRecord to specify properties of the metadata object, distinct from the resource is describes.
 
 ## skos:Concept (cdifConcept)
 
@@ -216,7 +216,7 @@ Only `@type` and `skos:prefLabel` are required. A concept may therefore be valid
 
 - **Cardinality:** Optional
 - **Content:** string
-- **Description:** Classification code for this concept within the scheme. A single string, consistent with `CdifCodelistConcept` in the Codelist profile. Optional here — a concept whose code is essential belongs in a [codelist](https://github.com/Cross-Domain-Interoperability-Framework/profile-codelist), where `skos:notation` is required.
+- **Description:** Classification code for this concept within a scheme.
 
 ### skos:definition
 
@@ -268,7 +268,7 @@ The record is typed `schema:Dataset` and marked as a catalog record through `sch
 
 - **Cardinality:** Required, Repeatable
 - **Content:** array of string or object reference, at least one
-- **Description:** Must contain the object reference `{"@id": "dcat:CatalogRecord"}`, which is what marks this node as the metadata record rather than as the described resource. The bare string `"dcat:CatalogRecord"` satisfies the item schema but **not** the `contains` constraint, which requires the `{"@id": ...}` object form. Tooling that reads `schema:additionalType` as a string literal will not recognize the record.
+- **Description:** schema.org property used to assign other type names or identifiers to extend the rdf @type for semantic purposes, without adding property requirements on the object from those types
 
 ### dcterms:conformsTo
 
@@ -280,7 +280,7 @@ The record is typed `schema:Dataset` and marked as a catalog record through `sch
 
 - **Cardinality:** Optional
 - **Content:** object reference
-- **Description:** The resource this record describes, normally the concept scheme's own `@id`.
+- **Description:** an object reference to the JSON object/graph node that a subjectOf.Dataset[additionalProperty = dcat:CatalogRecord] describes
 
 The record's `@type` is required and must contain `schema:Dataset`. Its `@id` is optional, and is distinct from the scheme's own `@id` — the record and the vocabulary it describes are different resources.
 
