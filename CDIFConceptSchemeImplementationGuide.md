@@ -63,7 +63,7 @@ A conforming concept scheme is typed as a `skos:ConceptScheme` and declares conf
   "schema:subjectOf": {
     "@type": \\\["schema:Dataset"],
     "schema:additionalType": \\\[{"@id": "dcat:CatalogRecord"}],
-    "dcterms:conformsTo": \\\[{"@id": "https://w3id.org/cdif/conceptscheme/1.1"}]
+    "dcterms:conformsTo": \\\[{"@id": "https://w3id.org/cdif/conceptscheme/2.0"}]
   }
 }
 ```
@@ -263,7 +263,7 @@ The record is typed `schema:Dataset` and marked as a catalog record through `sch
 |-|-|-|
 |`@type`|**Required**, repeatable|array of string containing `schema:Dataset`|
 |`schema:additionalType`|**Required**, repeatable|array containing `{"@id": "dcat:CatalogRecord"}`|
-|`dcterms:conformsTo`|**Required**, repeatable|array containing `{"@id": "https://w3id.org/cdif/conceptscheme/1.1"}`|
+|`dcterms:conformsTo`|**Required**, repeatable|array containing `{"@id": "https://w3id.org/cdif/conceptscheme/2.0"}`|
 |`@id`|Optional|string|
 |`schema:about`|Optional|object reference|
 
@@ -277,7 +277,7 @@ The record is typed `schema:Dataset` and marked as a catalog record through `sch
 
 * **Cardinality:** Required, Repeatable
 * **Content:** array of object reference, at least one
-* **Description:** Must contain `{"@id": "https://w3id.org/cdif/conceptscheme/1.1"}`. This is the record's claim to conform to this profile. Each item is a sealed `{@id}` reference; a bare string is not accepted.
+* **Description:** Must contain `{"@id": "https://w3id.org/cdif/conceptscheme/2.0"}`. This is the record's claim to conform to this profile. Each item is a sealed `{@id}` reference; a bare string is not accepted.
 
 ### schema:about
 

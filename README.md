@@ -14,7 +14,7 @@ This repository holds the published artifacts for the **CDIF Concept Scheme prof
 
 A conforming concept scheme is a `skos:ConceptScheme` and declares conformance to:
 
-- `https://w3id.org/cdif/conceptscheme/1.1`
+- `https://w3id.org/cdif/conceptscheme/2.0`
 
 Required elements: a scheme IRI (`@id`), `skos:prefLabel`, `skos:definition`, and at least one `skos:hasTopConcept`.
 

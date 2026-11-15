@@ -15,8 +15,8 @@ cdifd:CDIFConceptSchemeConceptShape a sh:NodeShape ;
 
 cdifd:CDIFConceptSchemeConformsToShape a sh:NodeShape ;
     sh:property [ a sh:PropertyShape ;
-            sh:hasValue <https://w3id.org/cdif/conceptscheme/1.1> ;
-            sh:message "A subjectOf catalog record on a CDIF concept scheme must include dcterms:conformsTo <https://w3id.org/cdif/conceptscheme/1.1>." ;
+            sh:hasValue <https://w3id.org/cdif/conceptscheme/2.0> ;
+            sh:message "A subjectOf catalog record on a CDIF concept scheme must include dcterms:conformsTo <https://w3id.org/cdif/conceptscheme/2.0>." ;
             sh:minCount 1 ;
             sh:path dcterms:conformsTo ] ;
     sh:target [ a sh:SPARQLTarget ;
