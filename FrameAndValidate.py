@@ -3,7 +3,7 @@
 # GENERATED FILE -- DO NOT EDIT.
 # Synced from CDIF/validation/tools/FrameAndValidate.py (the normative source).
 # Edit there, then run:  python tools/sync_frameandvalidate.py --apply
-# src-sha256: f8b9c91835c80508dc4093e02fa5fafee95f7910c9045bfb0c7ba857ab2aa968
+# src-sha256: c6a834774870295350ad9f60ef78adfd494d8bb55d71d26f4f9d400ce583abf6
 # <<< CDIF-SYNC GENERATED <<<
 
 """
@@ -18,6 +18,8 @@ Usage:
                                [--schema schema.json] [--frame frame.jsonld]
 """
 
+import collections
+import copy
 import json
 import argparse
 import sys
@@ -80,13 +82,19 @@ ARRAY_PROPERTIES = [
     'cdi:hasPhysicalMapping',
     'cdi:uses',
     'cdi:physicalDataType',
-    'cdi:function',
+    'cdif:function',
     'cdi:takesSentinelValuesFrom',
     'cdi:statistic',
     'cdif:hasPhysicalMapping',
     'cdif:uses',
     'cdif:recommendedDataType',
     'cdif:isComposedOf',
+    # type: array at all three of its sites in cdifDataStructure (DataStructure,
+    # DimensionalDataStructure, WideDataStructure), so a structure carrying ONE
+    # foreign key framed to a bare object and failed its own schema. Note
+    # cdif:has_PrimaryKey is deliberately NOT here: it is a $ref to a single
+    # object, so wrapping it would break the case this fixes.
+    'cdif:has_ForeignKey',
     'cdif:has_Statistics',
     'cdif:has_CategoryStatistics',
     'cdif:appliesTo',
@@ -111,6 +119,105 @@ ARRAY_PROPERTIES = [
     'skos:editorialNote',
     'skos:historyNote',
     'skos:example',
+
+    # --- 2026-10-01 sweep -------------------------------------------------
+    # Every property below is `type: array` at EVERY site that declares it in
+    # metadataBuildingBlocks/_sources (93 schema.yaml files, archive excluded),
+    # and was absent from this list. JSON-LD compaction flattens any
+    # single-valued array, so each one failed its own schema the first time a
+    # document happened to carry exactly one value -- which is how
+    # cdif:has_ForeignKey was found, by accident rather than by a check.
+    #
+    # Demonstrated rather than assumed: reducing
+    # exampleCDIFDataStructureMinimal.json to ONE cdi:has_DataStructureComponent
+    # framed it to a bare object and failed validation with
+    # "cdi:has_DataStructureComponent: [type]". The mechanism is compaction, not
+    # anything property-specific, so it applies uniformly to the rest.
+    #
+    # Properties that are an array in some schemas and a scalar in others are
+    # DELIBERATELY EXCLUDED -- 44 of them, including cdi:name, cdi:displayLabel,
+    # schema:identifier and skos:notation. This list is keyed on name alone, so
+    # wrapping those would break their scalar sites; they need parent_key /
+    # type_list keying instead. Do not "finish the sweep" by adding them.
+    'bios:computationalTool',
+    'bios:labEquipment',
+    'bios:parameterValue',
+    'bios:reagent',
+    'cdi:availableLanguage',
+    'cdi:commonalityCode',
+    'cdi:copyright',
+    'cdi:corrections',
+    'cdi:entityProduced',
+    'cdi:entityUsed',
+    'cdi:entryReference',
+    'cdi:entryValue',
+    'cdi:excludes',
+    'cdi:explanatoryNotes',
+    'cdi:futureNotes',
+    'cdi:groups',
+    'cdi:hasContact',
+    'cdi:hasInternal',
+    'cdi:hasRulingBy',
+    'cdi:hasSource',
+    'cdi:hasSubActivity',
+    'cdi:hasSubStep',
+    'cdi:hasTarget',
+    'cdi:has_Category',
+    'cdi:has_CategoryPosition',
+    'cdi:has_ClassificationIndexEntry',
+    'cdi:has_ClassificationIndexEntryPosition',
+    'cdi:has_ClassificationItem',
+    'cdi:has_ClassificationItemPosition',
+    'cdi:has_Code',
+    'cdi:has_CodePosition',
+    'cdi:has_ComponentPosition',
+    'cdi:has_DataPoint',
+    'cdi:has_DataStructureComponent',
+    'cdi:has_DimensionComponent',
+    'cdi:has_ForeignKey',
+    'cdi:has_InstanceVariable',
+    'cdi:has_InstanceVariableMap',
+    'cdi:has_Key',
+    'cdi:has_LogicalRecord',
+    'cdi:has_LogicalRecordRelationship',
+    'cdi:has_PhysicalMapping',
+    'cdi:has_PhysicalMappingPosition',
+    'cdi:has_Step',
+    'cdi:isBasedOn',
+    'cdi:isBoundedBy',
+    'cdi:isComposedOf',
+    'cdi:isIndexedBy',
+    'cdi:isPredecessorOf',
+    'cdi:isSuccessorOf',
+    'cdi:line',
+    'cdi:lineTerminator',
+    'cdi:mappingLabel',
+    'cdi:maps',
+    'cdi:operatesOn',
+    'cdi:organizes',
+    'cdi:performs',
+    'cdi:produces',
+    'cdi:qualifies',
+    'cdi:receives',
+    'cdi:recommendedDataType',
+    'cdi:standard',
+    'cdi:updateChanges',
+    'cdi:uses_InstanceValue',
+    'cdi:variableFunction',
+    'cdif:has_Concept',
+    'cdif:isDefinedBy_Concept',
+    'cdif:semantic',
+    'oas:content',
+    'oas:enum',
+    'oas:parameters',
+    'oas:response',
+    'prov:generated',
+    'prov:wasAssociatedWith',
+    'prov:wasInformedBy',
+    'schema:category',
+    'schema:hasDefinedTerm',
+    'schema:step',
+    'skos:member',
 ]
 
 # Properties that are arrays only in specific contexts (not globally) are handled
@@ -200,7 +307,7 @@ def is_bare_id_reference(obj):
 # These run ONLY on documents rooted directly on a DDI-CDI data-structure type
 # (the cdi:has_DataStructureComponent grammar), never on Dataset / manifest /
 # data-description docs, where the same keys are typed differently (e.g.
-# cdi:qualifies is an array here but a single object in cdifDataDescription).
+# cdif:qualifies is an array here but a single object in cdifDataDescription).
 STRUCTURE_ROOT_TYPES = frozenset({
     'DataStructure', 'DimensionalDataStructure',
     'LongDataStructure', 'WideDataStructure',
@@ -210,8 +317,11 @@ STRUCTURE_ROOT_TYPES = frozenset({
 # it. Framing with @embed:@always inlines the whole target; these get collapsed
 # back to a bare {@id} because the full node is retained at its own slot (or is
 # an external resource) and the tightened schemas type these slots as {@id}-only
-# references. The collapse runs on EVERY doc type (see remove_nulls_and_normalize),
-# not just bare-structure docs -- cdi:qualifies also appears in dataset-rooted
+# references. collapse_reference_slots checks that premise per node: a copy is
+# collapsed only when a copy of the same @id with the same properties survives
+# elsewhere, and is otherwise left inline for the schema to judge. The collapse
+# runs on EVERY doc type (last step of frame_cdif_document), not just
+# bare-structure docs -- cdif:qualifies also appears in dataset-rooted
 # data-description docs, and schema:about (manifest part -> documented file) /
 # schema:result (activity -> produced entity) are reference slots on manifest /
 # provenance / dataset docs.
@@ -223,7 +333,7 @@ STRUCTURE_ROOT_TYPES = frozenset({
 # authoring error -- fix the example to a bare {@id} or a full Reference with
 # @type + schema:url -- not something the harness should silently collapse.)
 REFERENCE_ONLY_KEYS = (
-    'cdi:qualifies', 'cdi:refersTo',
+    'cdif:qualifies', 'cdi:refersTo',
     'schema:about', 'schema:result',
     # On an InstanceVariable this is an objectReference -- @id and nothing
     # else -- because the represented-variable-level properties are defined
@@ -234,22 +344,76 @@ REFERENCE_ONLY_KEYS = (
     # cdif:isDefinedBy_Variable and may legitimately be inline, so it must NOT
     # be added here; the two used to share this name and no longer do.
     'cdif:isDefinedBy_RepresentedVariable',
+    # Sealed {@id} in cdifPhysicalMapping -- its own description reads
+    # "Reference to a variable defined in schema:variableMeasured", so the
+    # target is always present elsewhere and collapsing the framing-embedded
+    # copy is non-lossy.
+    'cdif:formats_InstanceVariable',
+    # A key names variables that are declared once (in schema:variableMeasured)
+    # and referenced from each ComponentPosition, so the framing-embedded copy
+    # is never the only copy. Safe under a name-keyed collapse because every
+    # definition of this name permits a bare reference: the three CDIF sites
+    # (cdifKey, and ForeignKey / PrimaryKey in cdifDataStructure) are now
+    # objectReference-only, and the eleven canonical ddiProperties sites are
+    # anyOf[inline, ddicdiDataTypes#/$defs/id-reference], whose id-reference is
+    # exactly {@id}. This was NOT safe before 2026-09-24, when two CDIF sites
+    # still admitted an inline variable that a collapse would have destroyed.
+    'cdi:indexes',
+    # Sealed {@id} on cdif:ForeignKey, its only definition. A key in the same
+    # document is held as cdif:has_PrimaryKey (or cdif:hasPrimaryKey) on the
+    # referenced data, and framing embeds a second copy here.
+    'cdif:references_PrimaryKey',
 )
 
 # Keys the (bare-structure) schema requires as arrays but framing collapses to a
 # scalar / single object when there is exactly one value.
-STRUCTURE_ARRAY_KEYS = ('cdif:name', 'cdi:qualifies', 'cdi:semantic')
+STRUCTURE_ARRAY_KEYS = ('cdif:name', 'cdif:qualifies', 'cdif:semantic')
 
 
-def _collapse_to_id_ref(value):
-    """Reduce an embedded node (a dict carrying @id plus other keys) to a bare
-    {@id} reference. Recurses into lists; leaves inline objects without @id (e.g.
-    an anonymous role) and plain strings untouched."""
-    if isinstance(value, list):
-        return [_collapse_to_id_ref(v) for v in value]
-    if isinstance(value, dict) and '@id' in value and len(value) > 1:
-        return {'@id': value['@id']}
-    return value
+def collapse_reference_slots(tree, keys=REFERENCE_ONLY_KEYS):
+    """Reduce framing-embedded nodes under reference-only `keys` to a bare
+    {@id} -- but only where that is non-lossy: some copy of the same @id that
+    survives elsewhere in `tree` carries at least the same properties.
+    Otherwise the inline node is kept, so its description reaches the schema.
+
+    The premise that the target "is defined elsewhere" does not always hold. An
+    activity's schema:result is very often the ONLY place its output is
+    described (name, @type, encodingFormat); collapsing it unconditionally threw
+    those triples away before validation, and the record passed while its
+    outputs were never checked. A node kept inline here counts as surviving, so
+    a later reference-slot copy of the same @id collapses against it, and the
+    reference slots inside it are judged the same way. Inline objects without
+    @id and plain strings are left untouched. Mutates and returns `tree`."""
+    kept = {}        # @id -> key sets of the copies that survive
+    queue = []       # (container, index-or-key, node) under a reference slot
+
+    def scan(o):
+        if isinstance(o, list):
+            for x in o:
+                scan(x)
+        elif isinstance(o, dict):
+            if '@id' in o and len(o) > 1:
+                kept.setdefault(o['@id'], []).append(set(o))
+            for k, v in o.items():
+                if k not in keys:
+                    scan(v)
+                    continue
+                slots = ([(v, i, x) for i, x in enumerate(v)]
+                         if isinstance(v, list) else [(o, k, v)])
+                for container, slot, node in slots:
+                    if isinstance(node, dict) and '@id' in node and len(node) > 1:
+                        queue.append((container, slot, node))
+                    else:
+                        scan(node)
+
+    scan(tree)
+    while queue:
+        container, slot, node = queue.pop(0)
+        if any(ks >= set(node) for ks in kept.get(node['@id'], ())):
+            container[slot] = {'@id': node['@id']}
+        else:
+            scan(node)
+    return tree
 
 
 def _is_structure_rooted(doc):
@@ -265,22 +429,51 @@ def _is_structure_rooted(doc):
 
 
 def normalize_bare_structure(obj):
-    """Recursive normalizations for bare DataStructure documents: collapse
-    framing-inlined component references (cdi:qualifies / cdi:refersTo) back to
-    bare {@id}, and wrap single-valued STRUCTURE_ARRAY_KEYS into arrays."""
+    """Recursive normalizations for bare DataStructure documents: wrap
+    single-valued STRUCTURE_ARRAY_KEYS into arrays. (Framing-inlined component
+    references are collapsed for every doc type by collapse_reference_slots.)"""
     if isinstance(obj, list):
         return [normalize_bare_structure(x) for x in obj]
     if isinstance(obj, dict):
+        # A component's cdif:isDefinedBy_Variable may be an InstanceVariable that
+        # framing inlined from schema:variableMeasured. There cdif:qualifies is a
+        # single objectReference (cdifInstanceVariable), not the component's
+        # array, so wrapping it would fail a valid variable.
+        t = obj.get('@type')
+        is_variable = any(_local_name(v) == 'InstanceVariable'
+                          for v in (t if isinstance(t, list) else [t]) if isinstance(v, str))
         out = {}
         for k, v in obj.items():
             v = normalize_bare_structure(v)
-            if k in REFERENCE_ONLY_KEYS:
-                v = _collapse_to_id_ref(v)
-            if k in STRUCTURE_ARRAY_KEYS and not isinstance(v, list):
+            if k in STRUCTURE_ARRAY_KEYS and not isinstance(v, list) and \
+                    not (is_variable and k == 'cdif:qualifies'):
                 v = [v]
             out[k] = v
         return out
     return obj
+
+
+def _normalize_structure_subtrees(obj):
+    """Apply normalize_bare_structure to every cdi:isStructuredBy value, leaving
+    the rest of a Dataset / manifest / data-description document untouched."""
+    if isinstance(obj, list):
+        return [_normalize_structure_subtrees(x) for x in obj]
+    if isinstance(obj, dict):
+        out = {}
+        for k, v in obj.items():
+            if k == 'cdi:isStructuredBy':
+                out[k] = normalize_bare_structure(v)
+            else:
+                out[k] = _normalize_structure_subtrees(v)
+        return out
+    return obj
+
+
+
+_CATALOG_RECORD_TOKENS = frozenset({
+    'dcat:CatalogRecord',
+    'http://www.w3.org/ns/dcat#CatalogRecord',
+})
 
 
 def _is_catalog_record(item):
@@ -288,16 +481,40 @@ def _is_catalog_record(item):
 
     The CDIF schema:subjectOf wrapper is itself @type=schema:Dataset (so the
     Dataset frame matches it), but is distinguished by schema:additionalType
-    containing 'dcat:CatalogRecord'. The main-entity picker uses this to skip
-    the catalog-record entity."""
+    dcat:CatalogRecord. The main-entity picker uses this to skip the
+    catalog-record entity.
+
+    The value may be the compact CURIE 'dcat:CatalogRecord' or the full dcat#
+    IRI, as a bare string or an {@id} object -- the IRI-lint normalization emits
+    the {@id} form -- singly or in a list. All of these are recognized; matching
+    only the compact string let an {@id}-form catalog record through as an
+    ordinary candidate."""
     if not isinstance(item, dict):
         return False
     at = item.get('schema:additionalType')
     if at is None:
         return False
-    if isinstance(at, str):
-        at = [at]
-    return 'dcat:CatalogRecord' in at
+    for v in (at if isinstance(at, list) else [at]):
+        if isinstance(v, dict):
+            v = v.get('@id')
+        if isinstance(v, str) and v in _CATALOG_RECORD_TOKENS:
+            return True
+    return False
+
+
+def _has_catalog_record_subjectof(item):
+    """True if item carries schema:subjectOf whose value is a catalog record.
+
+    This is the CDIF metadata-about-metadata wrapper that marks the described
+    resource -- the document's root -- as distinct from a related dataset or a
+    schema:hasPart member, neither of which carries it. A bare schema:subjectOf
+    is not enough: its value must itself be tagged dcat:CatalogRecord."""
+    so = item.get('schema:subjectOf') if isinstance(item, dict) else None
+    if so is None:
+        return False
+    return any(_is_catalog_record(v)
+               for v in (so if isinstance(so, list) else [so])
+               if isinstance(v, dict))
 
 
 def _frame_root_types(frame):
@@ -365,24 +582,81 @@ def _referenced_ids(graph):
     return refs
 
 
+def _haspart_member_ids(graph):
+    """@ids of nodes that appear as a schema:hasPart member anywhere in the
+    graph -- i.e. parts of some other node.
+
+    A part is never the document's main entity, so the picker excludes these.
+    Collected across the whole tree (the hasPart may sit on a nested node),
+    from both an embedded member (a dict carrying its own @id) and a bare
+    {@id} reference."""
+    ids = set()
+
+    def collect(value):
+        if isinstance(value, dict):
+            got = value.get('@id')
+            if isinstance(got, str):
+                ids.add(got)
+        elif isinstance(value, list):
+            for v in value:
+                collect(v)
+
+    def walk(node):
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if key == 'schema:hasPart':
+                    collect(value)
+                walk(value)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v)
+
+    for item in graph:
+        walk(item)
+    return ids
+
+
 def pick_main_entity(graph, frame):
     """Choose the document's main entity from a framed @graph.
 
-    Profile-agnostic: prefer a node nothing else references (the root of a
-    hasPart tree), then one whose @type matches the frame's root type
-    (skipping catalog records), then a node with schema:distribution, then one
-    with schema:url, then the first non-catalog-record node.
+    Profile-agnostic: skip catalog records and schema:hasPart members, prefer
+    the node carrying schema:subjectOf (its catalog record), then a node
+    nothing else references (the root of a hasPart tree), then one with
+    schema:distribution, then one with schema:url, then one whose @type matches
+    the frame's root type, then the first remaining node.
 
-    The unreferenced-node check has to come FIRST. Without it, a dataset
-    whose parts carry the distributions -- a package of independently
-    accessible resources, where the aggregate itself has no single
-    download -- loses to its own first part on the schema:distribution
-    test, and the validator then reports on the part while silently
-    discarding the dataset. Every such record passes, because the thing
-    being checked was never the thing being described.
+    A schema:hasPart member is excluded first because it is a child of some
+    other node, never the subject. Without this, a record whose root and one of
+    its parts are both schema:Dataset can validate the part: framing hoists both
+    to the @graph, and a part that sorts first and carries a schema:url wins the
+    url test below (CDIF-validation issue #20). schema:subjectOf then names the
+    root positively, since the catalog record's schema:about back-reference
+    keeps the root from looking "unreferenced".
+
+    The unreferenced-node check still matters for packages whose parts carry the
+    distributions -- a set of independently accessible resources where the
+    aggregate has no single download -- so the aggregate is not lost to its own
+    first part on the schema:distribution test.
     """
     candidates = [it for it in graph
                   if isinstance(it, dict) and not _is_catalog_record(it)]
+    # A schema:hasPart member is a child, never the main entity. Drop parts up
+    # front so a part that happens to carry a distribution or url (and sorts
+    # before the aggregate in the framed @graph) can't be chosen over the
+    # resource that contains it. Guarded: never empty the candidate set.
+    part_ids = _haspart_member_ids(graph)
+    if part_ids:
+        non_parts = [it for it in candidates if it.get('@id') not in part_ids]
+        if non_parts:
+            candidates = non_parts
+    # The described resource carries schema:subjectOf whose value is its catalog
+    # record (schema:additionalType dcat:CatalogRecord); a related dataset or a
+    # part does not. Prefer it -- this is the root even when the catalog record's
+    # schema:about back-reference makes it look "referenced" below. Guarded: only
+    # narrows when such a node exists.
+    subj = [it for it in candidates if _has_catalog_record_subjectof(it)]
+    if subj:
+        candidates = subj
     if len(candidates) > 1:
         referenced = _referenced_ids(graph)
         roots = [it for it in candidates
@@ -495,13 +769,6 @@ def remove_nulls_and_normalize(obj, parent_key=None):
             if new_key == 'schema:identifier' and is_bare_id_reference(new_value):
                 new_value = new_value['@id']
 
-            # Collapse framing-embedded references back to a bare {@id} for
-            # reference-only slots (the tightened schemas type these as {@id};
-            # framing with @embed:@always inlines the whole target). Ungated --
-            # runs on every doc type, before the array wrap below.
-            if new_key in REFERENCE_ONLY_KEYS:
-                new_value = _collapse_to_id_ref(new_value)
-
             # Wrap in array if schema expects array and value is not already an array
             if new_key in ARRAY_PROPERTIES and not isinstance(new_value, list):
                 new_value = [new_value]
@@ -511,6 +778,18 @@ def remove_nulls_and_normalize(obj, parent_key=None):
         # Context-aware wrapping based on @type of current node
         obj_type = result.get('@type', '')
         type_list = obj_type if isinstance(obj_type, list) else ([obj_type] if obj_type else [])
+
+        # cdif:displayLabel is an array on a Category, a RepresentedVariable, a
+        # UnitType and a TextMapping, but a plain string on cdifValueDomain's
+        # SubstantiveValueDomain and SentinelValueDomain. It therefore cannot go in
+        # ARRAY_PROPERTIES, which matches on property name alone -- that would wrap
+        # the two value-domain labels and break them. Keyed on the containing @type
+        # instead, excluding only those two. Framing collapses a one-element array to
+        # a scalar, which is how ["Jan"] on a cdi:Category became "Jan" and failed a
+        # schema the source document satisfied.
+        if 'cdif:displayLabel' in result and not isinstance(result['cdif:displayLabel'], list):
+            if not ({'cdif:SubstantiveValueDomain', 'cdif:SentinelValueDomain'} & set(type_list)):
+                result['cdif:displayLabel'] = [result['cdif:displayLabel']]
 
         # schema:propertyID: array inside variableMeasured and additionalProperty items,
         # string on plain Identifier PropertyValues (e.g. inside schema:identifier)
@@ -548,8 +827,14 @@ def remove_nulls_and_normalize(obj, parent_key=None):
                 result['schema:about'] = [about]
 
         # schema:encodingFormat: array on DataDownload and on MediaObject
-        # (archive member files in schema:hasPart), string on EntryPoint
-        if 'schema:DataDownload' in type_list or 'schema:MediaObject' in type_list:
+        # (archive member files in schema:hasPart), string on EntryPoint.
+        # A schema:hasPart item is a manifest part whatever its type -- untyped
+        # parts (NIAID's) carry an encodingFormat the manifest types as an array.
+        # Keyed on the parent rather than added to ARRAY_PROPERTIES because 19
+        # constraints (an OpenAPI content item, a related link's EntryPoint
+        # target) type it as a string; none of those sit under schema:hasPart.
+        if ('schema:DataDownload' in type_list or 'schema:MediaObject' in type_list
+                or parent_key == 'schema:hasPart' and 'schema:EntryPoint' not in type_list):
             ef = result.get('schema:encodingFormat')
             if ef is not None and not isinstance(ef, list):
                 result['schema:encodingFormat'] = [ef]
@@ -558,21 +843,27 @@ def remove_nulls_and_normalize(obj, parent_key=None):
             if isinstance(ef, list) and len(ef) == 1:
                 result['schema:encodingFormat'] = ef[0]
 
-        # schema:contributor inside Role: unwrap single-element array to bare value
-        # (at root level it's an array of contributors, but inside Role it's a single agent)
+        # schema:contributor / schema:participant inside Role: unwrap a single-element
+        # array to the bare value. Both are in ARRAY_PROPERTIES (a dataset's contributors,
+        # an activity's participants), but inside a Role each holds the one agent in that
+        # role -- schema.org's Role pattern repeats the property the Role sits under.
         if 'schema:Role' in type_list:
-            inner = result.get('schema:contributor')
-            if isinstance(inner, list) and len(inner) == 1:
-                result['schema:contributor'] = inner[0]
+            for k in ('schema:contributor', 'schema:participant'):
+                inner = result.get(k)
+                if isinstance(inner, list) and len(inner) == 1:
+                    result[k] = inner[0]
 
         # schema:alternateName: array on variableMeasured and spatialCoverage items,
-        # string on Person/Organization
+        # on an instrument and on its schema:hasPart components (typed schema:Thing,
+        # which separates them from a manifest's parts), string on Person/Organization
         is_var_or_place = ('cdi:InstanceVariable' in type_list or
                            'schema:PropertyValue' in type_list and parent_key == 'schema:variableMeasured' or
                            'schema:Place' in type_list)
+        is_instrument_or_part = (parent_key == 'schema:instrument' or
+                                 parent_key == 'schema:hasPart' and 'schema:Thing' in type_list)
         alt = result.get('schema:alternateName')
         if alt is not None:
-            if is_var_or_place and not isinstance(alt, list):
+            if (is_var_or_place or is_instrument_or_part) and not isinstance(alt, list):
                 result['schema:alternateName'] = [alt]
 
         # schema:identifier: single object/string on Person/Organization agents
@@ -609,12 +900,132 @@ def frame_cdif_document(doc_path, frame_path=None):
         doc = json.load(f)
 
     # Load custom frame if provided, otherwise use minimal frame template
+    frame = None
     if frame_path:
         print(f"Loading frame: {frame_path}")
         with open(frame_path, 'r', encoding='utf-8') as f:
             frame = json.load(f)
-    else:
-        frame = FRAME_TEMPLATE
+
+    return frame_cdif(doc, frame, verbose=True)
+
+
+# Canonical prefix for each CDIF-standard namespace IRI. A record may alias any
+# of these under a different prefix (e.g. `dct` instead of `dcterms` for Dublin
+# Core Terms, or `sdo` for schema.org). The framed-tree JSON Schemas and the
+# conformsTo extraction in ConformanceValidate match LITERAL prefixed keys, so an
+# alias like `dct:conformsTo` reads as a missing `dcterms:conformsTo` even though
+# the RDF is identical -- and SHACL, which works on expanded IRIs, passes it,
+# making the mismatch look like absent data. canonicalize_cdif_prefixes() rewrites
+# such aliases to the canonical prefix up front so the pipeline is agnostic to
+# which alias the source used. This map mirrors the prefixes declared in
+# CDIF-frame-2026.jsonld / CDIF-context-2026.jsonld. Keys are EXACT IRIs: an
+# `https://schema.org/` (note https) is a DIFFERENT namespace than the canonical
+# `http://schema.org/` and is intentionally left for the SOSO namespace-variant
+# lint, not silently rewritten here. Extension prefixes the map does not list
+# (cr:, rai:, wd:, ...) pass through untouched.
+CANONICAL_PREFIX_BY_IRI = {
+    "http://schema.org/": "schema",
+    "http://purl.org/dc/terms/": "dcterms",
+    "http://www.w3.org/ns/dcat#": "dcat",
+    "http://www.w3.org/ns/prov#": "prov",
+    "http://www.w3.org/ns/dqv#": "dqv",
+    "http://www.opengis.net/ont/geosparql#": "geosparql",
+    "http://www.opengis.net/ont/sf#": "sf",
+    "http://spdx.org/rdf/terms#": "spdx",
+    "http://www.w3.org/2006/time#": "time",
+    "http://www.w3.org/2004/02/skos/core#": "skos",
+    "http://ddialliance.org/Specification/DDI-CDI/1.0/RDF/": "cdi",
+    "https://w3id.org/cdif/": "cdif",
+    "http://www.w3.org/ns/csvw#": "csvw",
+    "https://w3id.org/cdif/xas/": "xas",
+    "https://manual.nexusformat.org/classes/": "nxs",
+    "https://ada.astromat.org/metadata/": "ada",
+}
+
+
+def canonicalize_cdif_prefixes(doc):
+    """Return `doc` with CDIF-standard namespace aliases rewritten to their
+    canonical prefixes (see CANONICAL_PREFIX_BY_IRI), so a record that used e.g.
+    `dct:` where the schemas expect `dcterms:` validates identically.
+
+    Rewrites prefixed object KEYS and the CURIE values of `@type` and `@id`;
+    full-IRI values (`{"@id": "https://..."}`) and literal strings are left
+    alone. The top-level `@context` is updated so the canonical prefix maps the
+    namespace and the redundant alias is dropped. Only an inline dict top-level
+    `@context` is introspected; a remote/list context, or a nested `@context`,
+    is left unchanged. The input document is not modified.
+    """
+    if not isinstance(doc, dict):
+        return doc
+    ctx = doc.get("@context")
+    if not isinstance(ctx, dict):
+        return doc
+
+    rename = {}
+    for alias, iri in ctx.items():
+        if isinstance(alias, str) and not alias.startswith("@") and isinstance(iri, str):
+            canon = CANONICAL_PREFIX_BY_IRI.get(iri)
+            if canon is not None and alias != canon:
+                rename[alias] = canon
+    if not rename:
+        return doc
+
+    def swap(curie):
+        if isinstance(curie, str):
+            prefix, sep, rest = curie.partition(":")
+            if sep and prefix in rename:
+                return f"{rename[prefix]}:{rest}"
+        return curie
+
+    def fix_ctx(c):
+        c = dict(c)
+        for alias, canon in rename.items():
+            iri = c.pop(alias, None)
+            if iri is not None:
+                c.setdefault(canon, iri)
+        return c
+
+    def walk(node, is_root=False):
+        if isinstance(node, dict):
+            out = {}
+            for k, v in node.items():
+                key = k if (isinstance(k, str) and k.startswith("@")) else swap(k)
+                if k == "@context":
+                    out[key] = fix_ctx(v) if (is_root and isinstance(v, dict)) else v
+                elif k == "@type":
+                    out[key] = [swap(x) for x in v] if isinstance(v, list) else swap(v)
+                elif k == "@id":
+                    out[key] = swap(v)
+                else:
+                    out[key] = walk(v)
+            return out
+        if isinstance(node, list):
+            return [walk(x) for x in node]
+        return node
+
+    return walk(doc, is_root=True)
+
+
+# JSON-LD 1.1 gen-delim characters: a simple term can serve as a prefix only when
+# its IRI ends in one of these (JSON-LD 1.1, 4.1.2 "Compact IRIs").
+GEN_DELIMS = (':', '/', '?', '#', '[', ']', '@')
+
+
+def frame_cdif(doc, frame=None, verbose=False):
+    """Frame an in-memory CDIF JSON-LD document and normalize it into the form
+    the StructuredSchemas validate against. `frame` is a frame object, or None
+    for FRAME_TEMPLATE compacted with OUTPUT_CONTEXT. Works on copies, so the
+    caller's document and frame are not modified. ConformanceValidate.py frames
+    through this function too, so both tools validate the same normalized form.
+    """
+    doc = copy.deepcopy(doc)
+    # Normalize namespace aliases to the canonical CDIF prefixes (e.g. dct: ->
+    # dcterms:) before framing, so the compacted output uses the prefixes the
+    # StructuredSchemas require as literal keys regardless of the source's aliases.
+    doc = canonicalize_cdif_prefixes(doc)
+    custom_frame = frame is not None
+    frame = copy.deepcopy(frame) if custom_frame else FRAME_TEMPLATE
+    say = print if verbose else (lambda *a, **k: None)
 
     # Merge contexts bidirectionally so both expansion and compaction work with
     # all prefixes from either source:
@@ -622,7 +1033,7 @@ def frame_cdif_document(doc_path, frame_path=None):
     #    expand to full IRIs even if the document's own context is incomplete.
     # 2. Document prefixes -> frame context: domain-specific prefixes (ada:, xas:,
     #    skos:, ...) compact correctly without requiring every prefix in the frame.
-    if frame_path and isinstance(frame, dict) and '@context' in frame:
+    if custom_frame and isinstance(frame, dict) and '@context' in frame:
         doc_ctx = doc.get('@context', {})
         if isinstance(doc_ctx, dict):
             frame_ctx = frame['@context']
@@ -630,21 +1041,27 @@ def frame_cdif_document(doc_path, frame_path=None):
                 if isinstance(v, str) and k not in doc_ctx:
                     doc_ctx[k] = v
             doc['@context'] = doc_ctx
+            # Prefixes only. A term alias ("prefLabel": "skos:prefLabel") copied
+            # into the frame context makes compaction write the alias instead of
+            # the CURIE the StructuredSchemas require, so a document that is
+            # perfectly valid JSON-LD fails on every aliased property. JSON-LD 1.1
+            # (4.1.2) lets a simple term act as a prefix only when its IRI ends in
+            # a gen-delim character, so that is the test.
             for k, v in doc_ctx.items():
-                if isinstance(v, str) and k not in frame_ctx:
+                if isinstance(v, str) and k not in frame_ctx and v.endswith(GEN_DELIMS):
                     frame_ctx[k] = v
 
     # Step 1: Expand the document (resolves all prefixes to full IRIs)
-    print("Expanding document...")
+    say("Expanding document...")
     expanded = jsonld.expand(doc)
 
     # Step 2: Frame the document
-    print("Framing document...")
+    say("Framing document...")
     framed = jsonld.frame(expanded, frame)
 
     # Step 3: Compact with our desired output context (if using template frame)
-    if not frame_path:
-        print("Compacting with output context...")
+    if not custom_frame:
+        say("Compacting with output context...")
         framed = jsonld.compact(framed, OUTPUT_CONTEXT)
 
     # Step 4: Extract the main entity from @graph if present
@@ -655,16 +1072,79 @@ def frame_cdif_document(doc_path, frame_path=None):
             result = {'@context': framed.get('@context'), **entity}
 
     # Step 5: Post-process to remove nulls, normalize terms and array properties
-    print("Post-processing output...")
+    say("Post-processing output...")
     result = remove_nulls_and_normalize(result)
 
+    # Originally gated on a structure-rooted document, because the same keys are
+    # typed differently on Dataset / manifest / data-description docs. That held
+    # only while the profile frames were dropping cdi:isStructuredBy from
+    # dataset-rooted documents, so the grammar never appeared in one. With the
+    # frames fixed it does, and inside it cdif:qualifies is type: array on an
+    # AttributeComponent exactly as in a bare structure, while compaction still
+    # flattens the single-valued case.
     # Step 6: For bare DataStructure documents only, apply structure-specific
     # normalizations (reference collapse + array wrapping) that must NOT run on
     # Dataset / manifest / data-description docs (same keys, different types).
     if _is_structure_rooted(doc):
         result = normalize_bare_structure(result)
+    else:
+        result = _normalize_structure_subtrees(result)
+
+    # Step 7: collapse framing-embedded copies in reference-only slots back to a
+    # bare {@id} where the node's description survives elsewhere. Last, so the
+    # "survives elsewhere" test sees the document exactly as it will be validated.
+    result = collapse_reference_slots(result)
+
+    # Step 8: drop blank-node @ids that identify nothing.
+    result = prune_unreferenced_blank_ids(result)
 
     return result
+
+
+def prune_unreferenced_blank_ids(doc):
+    """Remove each blank-node @id (_:...) that occurs only once in the document.
+
+    Framing labels every node, so a node the source left anonymous comes out with
+    an @id such as "_:b22". A schema rule that an object must carry @id -- the core
+    prov:used item, for one -- then passes for every inline entity, identified or
+    not. A label used once links nothing, so removing it changes no triple. pyld
+    already prunes labels used once, but it counts over the whole framed @graph:
+    when a second top-level match (a catalog record whose schema:about points back
+    at the dataset) embeds the dataset again, every label in it occurs twice and is
+    kept, and after pick_main_entity each occurs once. Labels that occur more than
+    once in the validated document are references and are kept.
+    """
+    counts = collections.Counter()
+
+    def count(node):
+        if isinstance(node, dict):
+            v = node.get('@id')
+            if isinstance(v, str) and v.startswith('_:'):
+                counts[v] += 1
+            for x in node.values():
+                count(x)
+        elif isinstance(node, list):
+            for x in node:
+                count(x)
+
+    def prune(node):
+        if isinstance(node, dict):
+            return {k: prune(v) for k, v in node.items()
+                    if not (k == '@id' and isinstance(v, str)
+                            and v.startswith('_:') and counts[v] == 1)}
+        if isinstance(node, list):
+            return [prune(x) for x in node]
+        return node
+
+    count(doc)
+    return prune(doc)
+
+
+# Files the schema globs match but which are not schemas. conformance-schema-map
+# .json contains "schema" in its name, so '*schema*.json' matched it and counted
+# it as a candidate: a directory holding ONE real schema plus the map looked
+# ambiguous and auto-detection refused a schema it should have found.
+NOT_A_SCHEMA = frozenset({'conformance-schema-map.json'})
 
 
 def _auto_default(patterns, label):
@@ -674,6 +1154,8 @@ def _auto_default(patterns, label):
     seen = set()
     for pat in patterns:
         for p in sorted(SCRIPT_DIR.glob(pat)):
+            if p.name in NOT_A_SCHEMA:
+                continue
             if p.name not in seen:
                 seen.add(p.name)
                 hits.append(p)
@@ -683,6 +1165,77 @@ def _auto_default(patterns, label):
 
 
 FRAME_PATTERNS = ['*-frame.jsonld', '*frame*.jsonld']
+
+# A release repo ships exactly one schema, so _auto_default resolves it and the
+# selection below never runs. A MIRROR of the validation tools ships several
+# (discovery, data_description, complete), and there _auto_default correctly
+# refuses to guess -- leaving no schema at all, which is why cdif-umlmodel's
+# examples failed under every copy of this script and its sync regression gate
+# could prove nothing: with no baseline pass, nothing could regress.
+#
+# conformance-schema-map.json already states which schema serves which profile;
+# it was written for ConformanceValidate and nothing here read it. When several
+# schemas sit beside this script, the record's own declared conformance picks
+# one.
+CONFORMANCE_MAP_NAME = 'conformance-schema-map.json'
+
+# Most inclusive first. A record declaring discovery + data_description + more
+# is validated against the composite that subsumes them, not against whichever
+# subset schema happened to sort first. Validating a complete record against the
+# discovery schema would pass while checking a fraction of it.
+SCHEMA_PRECEDENCE = ('complete', 'data_description', 'datadescription', 'discovery')
+
+
+def _schema_from_conformance(input_path):
+    """A schema beside this script chosen by the input's declared conformance.
+
+    Returns None when the map is absent, the record declares nothing, or no
+    declared profile maps to a schema that exists here -- the caller then still
+    reports that an explicit --schema is needed.
+    """
+    map_path = SCRIPT_DIR / CONFORMANCE_MAP_NAME
+    if not map_path.exists():
+        return None
+    try:
+        with open(map_path, 'r', encoding='utf-8') as f:
+            mapping = json.load(f)
+        with open(input_path, 'r', encoding='utf-8') as f:
+            doc = json.load(f)
+    except Exception:
+        return None
+    # _declared_conformance is defined further down and takes the parsed doc.
+    declared = _declared_conformance(doc) if isinstance(doc, dict) else set()
+    if not declared:
+        return None
+
+    # Normalize as the map's own comment promises: trailing slash and the
+    # datadescription / data_description spellings are not significant.
+    def norm(u):
+        return u.rstrip('/').replace('datadescription', 'data_description')
+
+    by_uri = {norm(k): v for k, v in mapping.items()
+              if isinstance(v, dict) and v.get('schema')}
+    candidates = []
+    for uri in sorted(declared):
+        entry = by_uri.get(norm(uri))
+        if not entry:
+            continue
+        p = SCRIPT_DIR / entry['schema']
+        if p.exists() and p not in candidates:
+            candidates.append(p)
+    if not candidates:
+        return None
+    if len(candidates) > 1:
+        def rank(p):
+            low = p.name.lower()
+            for i, token in enumerate(SCHEMA_PRECEDENCE):
+                if token in low:
+                    return i
+            return len(SCHEMA_PRECEDENCE)
+        candidates.sort(key=rank)
+    print(f"Selected schema from declared conformance: {candidates[0].name}",
+          file=sys.stderr)
+    return str(candidates[0])
 
 
 def _local_name(token):
@@ -771,7 +1324,11 @@ def _load_detect_conformance():
                 sys.path.insert(0, str(c))
             break
     try:
-        from detect_conformance import detect_conformance, apply_conformance
+        from detect_conformance import apply_conformance
+        try:  # new name (stage-1 engine); fall back to the deprecated alias
+            from detect_conformance import detect_cdif_conformance as detect_conformance
+        except ImportError:
+            from detect_conformance import detect_conformance
         return detect_conformance, apply_conformance
     except Exception:
         return None, None
@@ -848,24 +1405,28 @@ def check_conformance_consistency(framed, source_doc=None):
     # one it has no rule for (codelist, complexCitation, ...) would otherwise
     # look like an over-claim every single time.
     try:
-        from detect_conformance import CONFORMANCE_CLASSES
+        from detect_conformance import CONFORMANCE_CLASSES, current_uri
         detectable = {c["uri"] for c in CONFORMANCE_CLASSES}
     except Exception:
         detectable = None
+        current_uri = lambda u: u  # noqa: E731
     subject = source_doc if source_doc is not None else framed
     detected = {u for u in (detect_fn(subject) or [])
                 if u.startswith(CDIF_URI_PREFIX)}
     declared_all = _declared_conformance(subject)
-    declared = {u for u in declared_all if u.startswith(CDIF_URI_PREFIX)}
+    declared_raw = {u for u in declared_all if u.startswith(CDIF_URI_PREFIX)}
+    # By class: a replaced version (core/1.1) claims the class now at core/2.0.
+    declared = {current_uri(u) for u in declared_raw}
     comparable = declared if detectable is None else (declared & detectable)
     return {
-        'declared': sorted(declared),
+        'declared': sorted(declared_raw),
         'detected': sorted(detected),
         'overclaimed': sorted(comparable - detected),
         'undeclared': sorted(detected - declared),
-        'other': sorted(declared_all - declared),
+        'other': sorted(declared_all - declared_raw),
         'unchecked': sorted(declared - comparable),
-        'lost_in_framing': bool(declared and not _declared_conformance(framed)),
+        'outdated': sorted(u for u in declared_raw if current_uri(u) != u.rstrip("/")),
+        'lost_in_framing': bool(declared_raw and not _declared_conformance(framed)),
     }
 
 
@@ -898,6 +1459,74 @@ def report_conformance_consistency(report):
     else:
         print("  Conformance INCONSISTENT (under-claimed only; advisory)")
     return agree
+
+
+# A root-level anyOf/oneOf failure reports "<the entire instance> is not valid
+# under any of the given schemas" -- jsonschema interpolates the whole document
+# into the message and names no property, so the one line you get says nothing
+# about what to fix. Every CDIF union branches on @type, and most of this
+# register's class targets are anyOf [inline class, {@id} reference], so this is
+# the DEFAULT shape of a failure here, not an edge case. It is also why
+# audit/test tooling has to discount anyOf messages as evidence: the whole
+# instance is in the string, so any token you search for "matches".
+#
+# The useful errors are in error.context -- the sub-errors each branch produced.
+# Report the deepest of those by path, because path depth is how far a branch got
+# before failing, and the branch that got furthest is nearly always the intended
+# one.
+
+def _leaf_errors(error):
+    """Flatten an error tree to the sub-errors that have no sub-errors of their own."""
+    if not error.context:
+        return [error]
+    out = []
+    for sub in error.context:
+        out.extend(_leaf_errors(sub))
+    return out
+
+
+def _is_discriminator(err):
+    """True for a branch-selection failure -- a const/enum on @type.
+
+    These are not defects, they are the other branches declining the instance, so
+    they are ranked last. They are still reported when nothing else is available,
+    because sometimes @type really is the thing that is wrong.
+    """
+    return (err.validator in ('const', 'enum', 'contains')
+            and err.absolute_path and str(err.absolute_path[-1]) == '@type')
+
+
+def explain_error(error, limit=3):
+    """Lines naming a property and a path for one validation error.
+
+    Returns the top-level message unchanged when it is already specific.
+    """
+    leaves = _leaf_errors(error)
+    if len(leaves) == 1 and leaves[0] is error:
+        path = '/'.join(str(p) for p in error.absolute_path)
+        return [f"  - /{path}: {error.message}"]
+
+    # Dedupe first: sibling branches of a union differ in their @type pin but
+    # share the rest, so the same real defect is reported once per branch -- 15
+    # leaves collapsing to 3 distinct ones is typical.
+    seen, unique = set(), []
+    for e in leaves:
+        key = (tuple(str(x) for x in e.absolute_path), e.validator, e.message)
+        if key not in seen:
+            seen.add(key)
+            unique.append(e)
+    leaves = unique
+    leaves.sort(key=lambda e: (_is_discriminator(e), -len(e.absolute_path)))
+    lines = [f"  - /{'/'.join(str(p) for p in error.absolute_path)}: "
+             f"no branch of {error.validator} accepted this node; "
+             f"closest {min(limit, len(leaves))} of {len(leaves)} branch errors:"]
+    for e in leaves[:limit]:
+        path = '/'.join(str(p) for p in e.absolute_path)
+        msg = e.message
+        if len(msg) > 300:
+            msg = msg[:300] + ' ...'
+        lines.append(f"      /{path}: [{e.validator}] {msg}")
+    return lines
 
 
 def validate_against_schema(framed, schema_path):
@@ -948,7 +1577,9 @@ Examples:
     overclaimed = []
 
     # Resolve auto-detected defaults when not given explicitly.
-    schema_path = args.schema or _auto_default(['*Schema*.json', '*schema*.json'], 'schema')
+    schema_path = (args.schema
+                   or _auto_default(['*Schema*.json', '*schema*.json'], 'schema')
+                   or _schema_from_conformance(args.input))
     frame_path = args.frame or _select_frame(args.input)
 
     try:
@@ -983,8 +1614,29 @@ Examples:
 
         if args.validate:
             if not schema_path:
-                print("Error: no schema given and could not auto-detect a single "
-                      "*Schema*.json beside this script; pass --schema.", file=sys.stderr)
+                # Say which of the two routes failed. "pass --schema" alone left
+                # the reader to discover that several schemas were present and
+                # that declared conformance is consulted when they are.
+                found = sorted({p.name
+                                for pat in ('*Schema*.json', '*schema*.json')
+                                for p in SCRIPT_DIR.glob(pat)
+                                if p.name not in NOT_A_SCHEMA})
+                print("Error: no schema given and none could be resolved; pass "
+                      "--schema.", file=sys.stderr)
+                if len(found) > 1:
+                    print("  %d schemas sit beside this script, so there is no "
+                          "single default: %s" % (len(found), ", ".join(found)),
+                          file=sys.stderr)
+                    if (SCRIPT_DIR / CONFORMANCE_MAP_NAME).exists():
+                        print("  %s was consulted and matched nothing: the record "
+                              "declares no dcterms:conformsTo, or none of the "
+                              "profiles it declares maps to a schema present here "
+                              "(provenance, manifest, data_structure and core map "
+                              "to SHACL shapes only)." % CONFORMANCE_MAP_NAME,
+                              file=sys.stderr)
+                elif not found:
+                    print("  no *Schema*.json found beside this script at all.",
+                          file=sys.stderr)
                 sys.exit(2)
             # Among the validation tests: does the record's declared
             # conformsTo agree with what its content actually supports?
@@ -1008,8 +1660,8 @@ Examples:
                 print("Validation FAILED")
                 print("\nErrors:")
                 for error in result['errors']:
-                    path = '/'.join(str(p) for p in error.absolute_path) if error.absolute_path else '/'
-                    print(f"  - /{path}: {error.message}")
+                    for line in explain_error(error):
+                        print(line)
                 sys.exit(1)
 
             # Deferred to here so a schema failure reports its errors first
